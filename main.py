@@ -17,14 +17,14 @@ from utils.util import unit_test_true
 
 
 # todo! this is just a test corpus.
-text_corpus = ['simone carolini is a man, simona is a woman, he is a man, he is a boy, girl is a woman, she is a girl.',
-               'Transferwise is a company. Transferwise is not a man. Transferwise is not a woman']
+text_corpus = ['simone carolini is a man, simona carolini is a woman, he is a man, he is a boy, girl is a woman',
+               'transferwise is a company. transferwise is not a man. transferwise is not a woman']
 
 
 def create_context_values(input_corpus: Type[List] = None, window_length: int = 2) -> Type[Union[List, List]]:
     corpus_processed, words_list = [], []
     for text in input_corpus:
-        text = text_processing(text)  # Clean the data.
+        text = text_processing(text)  # Clean the text.
         corpus_processed.append(text)  # Append words.
         # Context words.
         for i, word in enumerate(text):
@@ -37,7 +37,7 @@ def create_context_values(input_corpus: Type[List] = None, window_length: int = 
     return corpus_processed, words_list
 
 
-def create_word_index(corpus_processed: Type[List]):
+def create_word_index(corpus_processed: Type[List]) -> Type[Dict]:
     """
     Create a dictionary with word and its index.
 
@@ -72,27 +72,23 @@ def plot_word2vec_representation(embeddings_dict: Type[Dict], w: Type[List]):
 if __name__ == '__main__':
     corpus, word_lists = create_context_values(text_corpus)
     word_index = create_word_index(corpus)
-
-    print(word_lists)
     n_words = len(word_index)  # features/columns in your matrix.
     print(f'number of unique words: ', n_words)
 
     X, Y = [], []
-
     for i, word_list in enumerate(word_lists):
         main_word_index = word_index.get(word_list[0])  # Get the index of your focus word.
         context_word_index = word_index.get(word_list[1])  # Get the index of the context word
-        print(main_word_index, context_word_index)
-        print(word_index)
-        # Define the 1 x n array. n = number of features.
+
+        # Define the 1 x n array. n = number of features. X will contain focus words, Y will contain context words.
         X_row = np.zeros(n_words)
         Y_row = np.zeros(n_words)
-        # Replace with 1 the words that are present
+        # Replace with 1 the words that are present.
         X_row[main_word_index] = 1
         Y_row[context_word_index] = 1
-        # Append for all consecutives word_list items.
         X.append(X_row)
         Y.append(Y_row)
+
     # Store as spare matrices:
     # https://towardsdatascience.com/why-we-use-sparse-matrices-for-recommender-systems-2ccc9ab698a4
     # In jupyter notebook you may have to use np.asarray(X) etc.
@@ -103,6 +99,7 @@ if __name__ == '__main__':
 
     embeddings_size = 2
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'  # Odd issue with my env: https://github.com/openai/spinningup/issues/16
+
     # Deep Learning phase.
     focus_m = Input(shape=(X.shape[1],))
     context_m = Dense(units=embeddings_size, activation='linear')(focus_m)
@@ -113,13 +110,12 @@ if __name__ == '__main__':
     weights = model.get_weights()[0]  # Weights from neural network.
     print(weights)
 
+    # Associate words to embeddings/weights.
     words = list(word_index.keys())  # transform dict to list.
-    # print(words)
     embeddings_dict = dict()
     for word in words:
         embeddings_dict.update({word: weights[word_index.get(word)]})
     # word - [[embedding, embedding]]
     print(embeddings_dict)
-
-    # Use it in jupyter notebook.
+    # Plot this in jupyter notebook.
     plot_word2vec_representation(embeddings_dict, words)
