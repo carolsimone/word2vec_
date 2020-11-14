@@ -8,6 +8,7 @@ import string
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from typing import Type, List
+import unittest as unit_test
 
 
 def text_processing(text: Type[List] = None) -> Type[List]:
@@ -36,3 +37,9 @@ def text_processing(text: Type[List] = None) -> Type[List]:
     text = word_tokenize(text)  # Convert words into tokens.
     text = [word for word in text if word not in stopwords_]
     return text
+
+
+def unit_test_true(X, Y):
+    ut = unit_test.TestCase()
+    assert_condition = X.shape[0] == Y.shape[0]
+    return ut.assertTrue(assert_condition, 'Matrices have different row numbers!')
